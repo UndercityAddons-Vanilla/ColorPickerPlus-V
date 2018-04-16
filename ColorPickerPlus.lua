@@ -10,7 +10,13 @@
 -------------------------------------------------------------------------------------------------------
 
 local _, ColorPickerPlus = ...
-local MOD = ColorPickerPlus
+local MOD_MAJOR, MOD_MINOR="ColorPickerPlus", 1
+local MOD = _G[MOD_MAJOR]
+if not MOD or MOD.minor < MOD_MINOR then
+	MOD = MOD or {libs = {}, minors = {} }
+	_G[MOD_MAJOR] = MOD
+	MOD.minor = MOD_MINOR
+end
 local DB
 
 local lockedHueBar = false
@@ -124,6 +130,13 @@ eventFrame:RegisterEvent("PLAYER_LOGIN")
 
 -------------------------------------------------------------------------------------------------------------------------
 -- utility functions
+
+-- Surrogate for SetSize(), which appears not to be a defined method for frames
+-- or textures at least in WoW Vanilla and TBC.
+local function CPPSetSize(self, sizew, sizeh)
+	self:SetWidth(sizew)
+	self:SetHeight(sizeh)
+end
 
 -- Convert r, g, b input values into h, s, v return values
 -- All values are in the range 0 to 1.0
@@ -348,7 +361,7 @@ end
 
 function MOD:CreateCheckerboardBG (fr, dense, w, h)
 	local t = fr:CreateTexture("ColorPPCheckerboard")
-	t:SetSize(w, h)
+	CPPSetSize(t, w, h )
 	if dense then
 		t:SetTexture("Interface\\AddOns\\ColorPickerPlus\\media\\checkerboard16")
 	else
@@ -360,7 +373,8 @@ function MOD:CreateCheckerboardBG (fr, dense, w, h)
 end
 
 local function OldColorOnMouseUp (frame, button)
-	if frame:IsMouseOver() and button == "LeftButton" then
+--	if frame:IsMouseOver() and button == "LeftButton" then
+	if MouseIsOver(frame) and button == "LeftButton" then
 		-- Set the chosen color to the old color
 		local r, g, b, a = frame:GetBackdropColor()
 
@@ -377,7 +391,8 @@ local function OldColorOnMouseUp (frame, button)
 end
 
 local function ChosenColorOnMouseUp (frame, button)
-	if frame:IsMouseOver() and button == "LeftButton" and IsControlKeyDown() then
+--	if frame:IsMouseOver() and button == "LeftButton" and IsControlKeyDown() then
+	if MouseIsOver(frame) and button == "LeftButton" and IsControlKeyDown() then
 		
 		local r, g, b, a = frame:GetBackdropColor()
 		
@@ -389,7 +404,7 @@ end
 
 function MOD:CreateColorSwatches()
 	local fh = CreateFrame("Frame", "ColorPPSwatches", ColorPickerFrame)
-	fh:SetSize(colorSwatchWidth, colorSwatchHeight)
+	CPPSetSize(fh, colorSwatchWidth, colorSwatchHeight)
 	MOD:CreateCheckerboardBG (fh, true, colorSwatchWidth, colorSwatchHeight)
 	fh:SetPoint("BOTTOM", ColorPPPaletteFrame, "BOTTOM", 0, 0)
 	fh:SetPoint("LEFT", ColorPPBoxR, "LEFT", -14, 0)
@@ -398,7 +413,7 @@ function MOD:CreateColorSwatches()
 	local fr = CreateFrame("Frame", "ColorPPOldColor", fh)
 	fr:SetBackdrop(bgtable)
 	fr:SetFrameLevel(OpacitySliderFrame:GetFrameLevel())
-	fr:SetSize(colorSwatchWidth,colorSwatchHeight*0.35)
+	CPPSetSize(fr, colorSwatchWidth,colorSwatchHeight*0.35)
 	fr:ClearAllPoints()
 	fr:SetPoint("TOPLEFT", fh, "TOPLEFT")
 	fr:SetBackdropColor(0,0,0,1)
@@ -409,7 +424,7 @@ function MOD:CreateColorSwatches()
 	-- create frame for the chosen color for backdrop
 	fr = CreateFrame("Frame", "ColorPPChosenColor", ColorPickerFrame)
 	fr:SetBackdrop(bgtable)
-	fr:SetSize(colorSwatchWidth,colorSwatchHeight*0.65)
+	CPPSetSize(fr, colorSwatchWidth,colorSwatchHeight*0.65)
 	fr:ClearAllPoints()
 	fr:SetPoint("TOPLEFT", ColorPPOldColor, "BOTTOMLEFT", 0, 0)
 	fr:SetBackdropColor(0,0,0,1)
@@ -423,7 +438,7 @@ function MOD:CreateCopyPasteArea()
 	-- create frame for buttons and copiedColorSwatch
 	fr = CreateFrame("Frame", "ColorPPCopyPasteArea", ColorPPPaletteFrame)
 	fr:SetBackdrop(bgtable)
-	fr:SetSize(gradientWidth-10, gradientHeight-10)
+	CPPSetSize(fr, gradientWidth-10, gradientHeight-10)
 	fr:ClearAllPoints()
 	fr:SetPoint ("CENTER", ColorPPPaletteFrame, "CENTER", 0, 0) 
 	fr:SetBackdropColor(0.4,0.4,0.4,0)
@@ -436,7 +451,7 @@ function MOD:CreateCopyPasteArea()
 	f:SetBackdrop(bgtable)
 	f:SetBackdropColor(0,0,0,0)
 	f:SetBackdropBorderColor(0.1, 0.1, 0.1, 1)
-	f:SetSize(x, x)
+	CPPSetSize(f, x, x)
 	MOD:CreateCheckerboardBG(f, true, x, x)
 	f:ClearAllPoints()
 	f:SetPoint("LEFT", fr, "LEFT", 0, 0)
@@ -502,7 +517,8 @@ end
 
 local function PaletteSwatchOnMouseUp (frame, button)
 	local r,g,b,a
-	if (frame:IsMouseOver()) then
+--	if (frame:IsMouseOver()) then
+	if (MouseIsOver(frame)) then
 		if (button == "LeftButton") then
 			if IsModifierKeyDown() then
 				if IsShiftKeyDown() then   -- Set the swatch color to the chosen color
@@ -538,7 +554,7 @@ function MOD:CreatePalette()
 	-- create frame for palette
 	fr = CreateFrame("Frame", "ColorPPPalette", ColorPPPaletteFrame)
 	fr:SetBackdrop(bgtable)
-	fr:SetSize((cols*swatchSize)+((cols-1)*spacer)+(2*margin), (rows*swatchSize)+((rows-1)*spacer)+(2*margin))
+	CPPSetSize(fr, (cols*swatchSize)+((cols-1)*spacer)+(2*margin), (rows*swatchSize)+((rows-1)*spacer)+(2*margin))
 	fr:ClearAllPoints()
 	fr:SetPoint ("CENTER", ColorPPPaletteFrame, "CENTER", 0, 0)  
 	fr:SetPoint ("BOTTOM", ColorPPPaletteFrame, "BOTTOM", 0, 0)
@@ -557,7 +573,7 @@ function MOD:CreatePalette()
 			f:SetBackdrop(bgtable)
 			f:SetBackdropColor(c.r,c.g,c.b,c.a)
 			f:SetBackdropBorderColor(0, 0, 0, c.a)
-			f:SetSize(swatchSize, swatchSize)
+			CPPSetSize(f, swatchSize, swatchSize)
 			MOD:CreateCheckerboardBG(f, false, swatchSize, swatchSize)
 			f:ClearAllPoints()
 			f:SetPoint("TOPLEFT", fr, "TOPLEFT", margin+(spacer*(i-1)) + ((i-1)*swatchSize), -(margin + (spacer*(j-1)) + ((j-1)*swatchSize)))
@@ -569,7 +585,8 @@ end
 
 local function ClassPaletteSwatchOnMouseUp (frame, button)
 	local r,g,b,a
-	if (frame:IsMouseOver()) then
+--	if (frame:IsMouseOver()) then
+	if (MouseIsOver(frame)) then
 		-- Set the chosen color to the swatch color
 		r, g, b, a = frame:GetBackdropColor()
 
@@ -596,7 +613,7 @@ function MOD:CreateClassPalette()
 	-- create frame for palette
 	fr = CreateFrame("Frame", "ColorPPClassPalette", ColorPPPaletteFrame)
 	fr:SetBackdrop(bgtable)
-	fr:SetSize((cols*swatchSize)+((cols-1)*spacer)+(2*margin), (rows*swatchSize)+((rows-1)*spacer)+(2*margin))
+	CPPSetSize(fr, (cols*swatchSize)+((cols-1)*spacer)+(2*margin), (rows*swatchSize)+((rows-1)*spacer)+(2*margin))
 	fr:ClearAllPoints()
 	fr:SetPoint ("CENTER", ColorPPPaletteFrame, "CENTER", 0, -5)  
 	fr:SetBackdropColor(0.4,0.4,0.4,0)
@@ -622,7 +639,7 @@ function MOD:CreateClassPalette()
 			f:SetBackdrop(bgtable)
 			f:SetBackdropColor(c.r,c.g,c.b,c.a)
 			f:SetBackdropBorderColor(0, 0, 0, c.a)
-			f:SetSize(swatchSize, swatchSize)
+			CPPSetSize(f, swatchSize, swatchSize)
 			MOD:CreateCheckerboardBG(f, false, swatchSize, swatchSize)
 			f:ClearAllPoints()
 			f:SetPoint("TOPLEFT", fr, "TOPLEFT", margin+(spacer*(i-1)) + ((i-1)*swatchSize), -(margin + (spacer*(j-1)) + ((j-1)*swatchSize)))
@@ -635,7 +652,8 @@ end
 
 
 local function GradientOnMouseDown(self, button)
-	if self:IsMouseOver() and IsMouseButtonDown(LeftButton) then 
+--	if self:IsMouseOver() and IsMouseButtonDown(LeftButton) then 
+	if MouseIsOver(self) and IsMouseButtonDown(LeftButton) then 
 		if not (lockedHueBar or lockedOpacityBar) then
 			lockedGradient = true
 			if ColorPickerFrame.hasOpacity then lockedOpacity = 1-OpacitySliderFrame:GetValue() else lockedOpacity = 1 end
@@ -705,7 +723,7 @@ end
 function MOD:CreateColorGradient()  -- allows selection of saturation/value
 
 	local f = CreateFrame("Frame", "ColorPPGradient", ColorPickerFrame)
-	f:SetSize(gradientWidth, gradientHeight) 
+	CPPSetSize(f, gradientWidth, gradientHeight) 
 	f:SetPoint("TOPLEFT", ColorPPHueBar, "TOPRIGHT", spacing, 5)
 	f:EnableMouse(true)
 	f:SetScript("OnMouseDown", GradientOnMouseDown)
@@ -713,14 +731,14 @@ function MOD:CreateColorGradient()  -- allows selection of saturation/value
 
 	-- add Color Gradient 
 	local t = f:CreateTexture("ColorPPGradientTexture")
-	t:SetSize(gradientWidth-10, gradientHeight-10)
+	CPPSetSize(t, gradientWidth-10, gradientHeight-10)
 	t:SetTexture("Interface\\AddOns\\ColorPickerPlus\\media\\color_gradient")
 	t:SetPoint("CENTER", ColorPPGradient, "CENTER", 0, 0)
 	t:Show()
 	
 	-- add Color Overlay 
 	t = f:CreateTexture("ColorPPColorOverlay")
-	t:SetSize(gradientWidth-10, gradientHeight-10)
+	CPPSetSize(t, gradientWidth-10, gradientHeight-10)
 	t:SetDrawLayer("OVERLAY", 0)
 	t:SetTexture("Interface\\AddOns\\ColorPickerPlus\\media\\color_overlay")
 	t:SetPoint("CENTER", ColorPPGradient, "CENTER", 0, 0)
@@ -728,7 +746,7 @@ function MOD:CreateColorGradient()  -- allows selection of saturation/value
 	
 	-- add gradient thumb texture
 	t = f:CreateTexture("ColorPPColorGradientThumb")
-	t:SetSize(10, 10)
+	CPPSetSize(t, 10, 10)
 	t:SetDrawLayer("OVERLAY", 1)
 	--t:SetTexture("Interface\\AddOns\\ColorPickerPlus\\media\\cursor2")
 	t:SetTexture("Interface\\Buttons\\UI-ColorPicker-Buttons")
@@ -740,7 +758,8 @@ end
 
 
 local function HueBarOnMouseDown(self, button)
-	if self:IsMouseOver() and IsMouseButtonDown(LeftButton) then 
+--	if self:IsMouseOver() and IsMouseButtonDown(LeftButton) then 
+	if MouseIsOver(self) and IsMouseButtonDown(LeftButton) then 
 		if not (lockedGradient or lockedOpacityBar) then
 			lockedHueBar = true
 			if ColorPickerFrame.hasOpacity then lockedOpacity = 1-OpacitySliderFrame:GetValue() else lockedOpacity = 1 end
@@ -801,10 +820,10 @@ end
 function MOD:CreateHueBar()
 
 	local fh = CreateFrame("Frame", "ColorPPHueBarHolder", ColorPickerFrame)
-	fh:SetSize(hueBarWidth+6, hueBarHeight+8)
+	CPPSetSize(fh, hueBarWidth+6, hueBarHeight+8)
 	fh:SetPoint("TOPLEFT", ColorPickerFrame, "TOPLEFT", sideMargin, -topMargin)  
 	local f = CreateFrame("Frame", "ColorPPHueBar", fh)
-	f:SetSize(hueBarWidth, hueBarHeight)
+	CPPSetSize(f, hueBarWidth, hueBarHeight)
 	f:SetPoint("CENTER", fh, "CENTER")  
 	fh:EnableMouse(true)
 	fh:SetScript("OnUpdate", HueBarOnUpdate)
@@ -824,9 +843,10 @@ function MOD:CreateHueBar()
 		local t = f:CreateTexture("ColorPPHue"..tostring(i), ColorPPHueBar)
 		if i == 1 then t:SetPoint("TOP", ColorPPHueBar, "TOP", 0, 0) 
 			else t:SetPoint("TOP", "ColorPPHue"..tostring(i-1), "BOTTOM", 0, 0) end
-		t:SetSize(hueBarWidth, hueTextureSize)
+		CPPSetSize(t, hueBarWidth, hueTextureSize)
 		t:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-		t:SetColorTexture(1.0, 1.0, 1.0, 1.0)
+--		t:SetColorTexture(1.0, 1.0, 1.0, 1.0)
+		t:SetTexture(1.0, 1.0, 1.0, 1.0)
 		t:SetGradient("VERTICAL",  color[i+1].r, color[i+1].g, color[i+1].b, color[i].r, color[i].g, color[i].b )
 	end
 	
@@ -834,13 +854,14 @@ function MOD:CreateHueBar()
 	local thumb = f:CreateTexture("ColorPPHueBarThumb", fh)
 	thumb:SetTexture("Interface\\AddOns\\ColorPickerPlus\\Media\\SliderVBar.tga", false)
 	thumb:SetDrawLayer("OVERLAY")
-	thumb:SetSize(hueBarWidth+6, 8)
+	CPPSetSize(thumb, hueBarWidth+6, 8)
 
 end
 
 
 local function OpacityBarOnMouseDown(self, button)
-	if (self:IsMouseOver() and IsMouseButtonDown(LeftButton)) then 
+--	if (self:IsMouseOver() and IsMouseButtonDown(LeftButton)) then 
+	if (MouseIsOver(self) and IsMouseButtonDown(LeftButton)) then 
 		if not (lockedHueBar or lockedGradient) then
 			lockedOpacityBar = true
 			MOD:UpdateOpacityBarThumb()
@@ -891,7 +912,7 @@ end
 function MOD:CreateOpacityBar()
 	
 	local f = CreateFrame("Frame", "ColorPPOpacityBar", ColorPickerFrame)
-	f:SetSize(opacityBarWidth, opacityBarHeight)
+	CPPSetSize(f, opacityBarWidth, opacityBarHeight)
 	f:SetPoint("TOP", ColorPickerFrame, "TOP", 0, -topMargin)  
 	f:EnableMouse(true)
 	f:SetScript("OnUpdate", OpacityBarOnUpdate)
@@ -900,16 +921,17 @@ function MOD:CreateOpacityBar()
 	
 	local t = f:CreateTexture("ColorPPOpacityBarBG", f)
 	t:SetPoint("TOP", ColorPPOpacityBar, "TOP", 0, 0)  
-	t:SetSize(opacityBarWidth, opacityBarHeight)
+	CPPSetSize(t, opacityBarWidth, opacityBarHeight)
 	t:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-	t:SetColorTexture(1.0, 1.0, 1.0, 1.0)
+--TUB	t:SetColorTexture(1.0, 1.0, 1.0, 1.0)
+	t:SetTexture(1.0, 1.0, 1.0, 1.0)
 	t:SetGradient("VERTICAL",  1, 1, 1, 0, 0, 0 )
 	
  	-- Thumb indicates value position on the slider
 	local thumb = f:CreateTexture("ColorPPOpacityBarThumb", f)
 	thumb:SetTexture("Interface\\AddOns\\ColorPickerPlus\\Media\\SliderVBar.tga", false)
 	--thumb:SetTexture("Interface\\AddOns\\ColorPickerPlus\\Media\\ThinVSlider2.tga", false)
-	thumb:SetSize(opacityBarWidth+6, 8)
+	CPPSetSize(thumb, opacityBarWidth+6, 8)
 	thumb:SetDrawLayer("OVERLAY", 4)
 	thumb:SetPoint("CENTER", f, "CENTER", 0, 0)
 	
@@ -1022,7 +1044,7 @@ end
 function MOD:CreateHelpFrame()
 	local fr = CreateFrame("Frame", "ColorPPHelp", ColorPickerFrame)
 	fr:SetFrameLevel(OpacitySliderFrame:GetFrameLevel())
-	fr:SetSize(hueBarWidth,hueBarWidth)
+	CPPSetSize(fr, hueBarWidth,hueBarWidth)
 	fr:ClearAllPoints()
 	fr:SetPoint("TOPLEFT", ColorPPHueBar, "BOTTOMLEFT", 0, -spacing)
 	fs = fr:CreateFontString("ColorPPQM")
@@ -1038,7 +1060,7 @@ end
 
 function MOD:CreatePaletteFrame()  -- sits below the color gradient box, holds various palettes
 	local fr = CreateFrame("Frame", "ColorPPPaletteFrame", ColorPickerFrame)
-	fr:SetSize(gradientWidth-10, gradientHeight -10) 
+	CPPSetSize(fr, gradientWidth-10, gradientHeight -10) 
 	fr:SetPoint("CENTER", ColorPPGradient, "CENTER", 0, 0)
 	fr:SetPoint("BOTTOM", ColorPPHueBar, "BOTTOM", 0, 0)
 end
