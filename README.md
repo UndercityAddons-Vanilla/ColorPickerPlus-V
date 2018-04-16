@@ -21,7 +21,7 @@ To switch between the customizable palette and the class color palette, click th
 *Control-left-click* on the chosen color will print the decimal RGB values for the color into the chat window. This was added as a utility for add-on developers.
 
 ### Installation
-- Download the addon as a zip file from [this GitHub link](https://github.com/UndercityAddons-TBC/OneBag3/archive/master.zip)
+- Download the addon as a zip file from [this GitHub link](https://github.com/UndercityAddons-Vanilla/ColorPickerPlus-V/archive/master.zip)
 - Open the zip file and copy its contents into your <**WoW-Game-Folder**>*/Interface/Addons/*
 - Rename the top-level directory you just copied from *ColorPickerPlus-V-master* to ***ColorPickerPlus***
 - Start or restart your game
